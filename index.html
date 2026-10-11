@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Santuários BotW</title>
+<style>
+  :root { --bg:#0f1318; --card:#1a2028; --text:#fff; --muted:#8a8f98; --accent:#4fd1c5; --line:#4a5565; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.4 -apple-system,system-ui,sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:16px; }
+  h1 { margin:0; font-size:24px; }
+  .counter { color:var(--accent); font-weight:600; margin-top:2px; }
+  .bar { height:6px; background:#222a33; border-radius:3px; margin:8px 0 16px; overflow:hidden; }
+  .bar > i { display:block; height:100%; background:var(--accent); width:0; transition:width .2s; }
+  .tabs { display:flex; background:var(--card); border-radius:10px; padding:3px; margin-bottom:10px; }
+  .tabs button { flex:1; padding:9px; border:0; border-radius:8px; background:none; color:#aab1bb; font:inherit; font-weight:600; cursor:pointer; }
+  .tabs button.active { background:var(--accent); color:var(--bg); }
+  .filters { display:flex; gap:8px; margin-bottom:12px; }
+  .filters input, .filters select { background:var(--card); color:var(--text); border:0; border-radius:10px; padding:10px 12px; font:inherit; }
+  .filters input { flex:1; min-width:0; }
+  ul { list-style:none; margin:0; padding:0; }
+  li label { display:flex; align-items:center; gap:12px; background:var(--card); border-radius:10px; padding:12px; margin-bottom:8px; cursor:pointer; }
+  input[type=checkbox] { appearance:none; width:26px; height:26px; flex:none; border:2px solid var(--line); border-radius:6px; margin:0; display:grid; place-items:center; cursor:pointer; }
+  input[type=checkbox]:checked { background:var(--accent); border-color:var(--accent); }
+  input[type=checkbox]:checked::after { content:"✓"; color:var(--bg); font-weight:800; }
+  .name { font-weight:600; } .num { color:#6b7585; font-weight:400; }
+  .sub { color:var(--muted); font-size:13px; }
+  .empty { color:var(--muted); text-align:center; margin-top:40px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Santuários BotW</h1>
+  <div class="counter" id="counter"></div>
+  <div class="bar"><i id="fill"></i></div>
+
+  <div class="tabs">
+    <button id="tab-pending" class="active"></button>
+    <button id="tab-done"></button>
+  </div>
+
+  <div class="filters">
+    <input id="q" type="search" placeholder="Buscar por nome, desafio ou região" autocomplete="off">
+    <select id="region"></select>
+  </div>
+
+  <ul id="list"></ul>
+</main>
+
+<script>
+const SHRINES = [{"id":1,"name":"Oman Au","trial":"Magnesis Trial","region":"Great Plateau"},{"id":2,"name":"Ja Baij","trial":"Bomb Trial","region":"Great Plateau"},{"id":3,"name":"Owa Daim","trial":"Stasis Trial","region":"Great Plateau"},{"id":4,"name":"Keh Namut","trial":"Cryonis Trial","region":"Great Plateau"},{"id":5,"name":"Bosh Kala","trial":"The Wind Guides You","region":"Dueling Peaks"},{"id":6,"name":"Toto Sah","trial":"Toto Sah Apparatus","region":"Dueling Peaks"},{"id":7,"name":"Shee Vaneer","trial":"Twin Memories","region":"Dueling Peaks"},{"id":8,"name":"Ree Dahee","trial":"Timing Is Critical","region":"Dueling Peaks"},{"id":9,"name":"Shee Venath","trial":"Twin Memories","region":"Dueling Peaks"},{"id":10,"name":"Ha Dahamar","trial":"The Water Guides","region":"Dueling Peaks"},{"id":11,"name":"Ta'loh Naeg","trial":"Ta'loh Naeg's Teaching","region":"Dueling Peaks"},{"id":12,"name":"Hila Rao","trial":"Drifting","region":"Dueling Peaks"},{"id":13,"name":"Lakna Rokee","trial":"Lakna Rokee's Blessing","region":"Dueling Peaks"},{"id":14,"name":"Chaas Qeta","trial":"A Major Test of Strength","region":"Hateno"},{"id":15,"name":"Myahm Agana","trial":"Myahm Agana Apparatus","region":"Hateno"},{"id":16,"name":"Tahno O'ah","trial":"Tahno O'ah's Blessing","region":"Hateno"},{"id":17,"name":"Jitan Sa'mi","trial":"Jitan Sa'mi's Blessing","region":"Hateno"},{"id":18,"name":"Dow Na'eh","trial":"Three Boxes","region":"Hateno"},{"id":19,"name":"Kam Urog","trial":"Trial of Passage","region":"Hateno"},{"id":20,"name":"Mezza Lo","trial":"Ancient Trifecta","region":"Hateno"},{"id":21,"name":"Daka Tuss","trial":"Sunken Scoop","region":"Lanayru"},{"id":22,"name":"Kaya Wan","trial":"Shields from Water","region":"Lanayru"},{"id":23,"name":"Soh Kofi","trial":"A Minor Test of Strength","region":"Lanayru"},{"id":24,"name":"Sheh Rata","trial":"Speed of Light","region":"Lanayru"},{"id":25,"name":"Rucco Maag","trial":"Five Flames","region":"Lanayru"},{"id":26,"name":"Shai Yota","trial":"Shai Yota's Blessing","region":"Lanayru"},{"id":27,"name":"Dagah Keek","trial":"Dagah Keek's Blessing","region":"Lanayru"},{"id":28,"name":"Ne'ez Yohma","trial":"Pushing Power","region":"Lanayru"},{"id":29,"name":"Kah Mael","trial":"Drop and Rise","region":"Lanayru"},{"id":30,"name":"Rona Kachta","trial":"Rona Kachta's Blessing","region":"Great Hyrule Forest"},{"id":31,"name":"Monya Toma","trial":"Drawing Parabolas","region":"Great Hyrule Forest"},{"id":32,"name":"Kuhn Sidajj","trial":"Kuhn Sidajj's Blessing","region":"Great Hyrule Forest"},{"id":33,"name":"Daag Chokah","trial":"Daag Chokah's Blessing","region":"Great Hyrule Forest"},{"id":34,"name":"Keo Ruug","trial":"Fateful Stars","region":"Great Hyrule Forest"},{"id":35,"name":"Maag Halan","trial":"Maag Halan's Blessing","region":"Great Hyrule Forest"},{"id":36,"name":"Ketoh Wawai","trial":"Ketoh Wawai's Blessing","region":"Great Hyrule Forest"},{"id":37,"name":"Mirro Shaz","trial":"Tempered Power","region":"Great Hyrule Forest"},{"id":38,"name":"Dah Kaso","trial":"A Minor Test of Strength","region":"Central Hyrule"},{"id":39,"name":"Rota Ooh","trial":"Passing of the Gates","region":"Central Hyrule"},{"id":40,"name":"Wahgo Katta","trial":"Metal Connections","region":"Central Hyrule"},{"id":41,"name":"Kaam Ya'tak","trial":"Trial of Power","region":"Central Hyrule"},{"id":42,"name":"Katah Chuki","trial":"A Minor Test of Strength","region":"Central Hyrule"},{"id":43,"name":"Noya Neha","trial":"A Minor Test of Strength","region":"Central Hyrule"},{"id":44,"name":"Saas Ko'sah","trial":"A Major Test of Strength","region":"Central Hyrule"},{"id":45,"name":"Namika Ozz","trial":"A Modest Test of Strength","region":"Central Hyrule"},{"id":46,"name":"Ishto Soh","trial":"Bravery's Grasp","region":"Lake"},{"id":47,"name":"Shoqa Tatone","trial":"A Modest Test of Strength","region":"Lake"},{"id":48,"name":"Ka'o Makagh","trial":"Metal Doors Open the Way","region":"Lake"},{"id":49,"name":"Pumaag Nitae","trial":"A Minor Test of Strength","region":"Lake"},{"id":50,"name":"Ya Naga","trial":"Shatter the Heavens","region":"Lake"},{"id":51,"name":"Shae Katha","trial":"Shae Katha's Blessing","region":"Lake"},{"id":52,"name":"Shai Utoh","trial":"Halt the Tilt","region":"Faron"},{"id":53,"name":"Qukah Nata","trial":"Qukah Nata's Blessing","region":"Faron"},{"id":54,"name":"Shoda Sah","trial":"Impeccable Timing","region":"Faron"},{"id":55,"name":"Tawa Jinn","trial":"Tawa Jinn's Blessing","region":"Faron"},{"id":56,"name":"Yah Rin","trial":"A Weighty Decision","region":"Faron"},{"id":57,"name":"Kah Yah","trial":"Quick Thinking","region":"Faron"},{"id":58,"name":"Muwo Jeem","trial":"A Modest Test of Strength","region":"Faron"},{"id":59,"name":"Korgu Chideh","trial":"Korgu Chideh's Blessing","region":"Faron"},{"id":60,"name":"Mijah Rokee","trial":"A Modest Test of Strength","region":"Ridgeland"},{"id":61,"name":"Shae Loya","trial":"Aim for the Moment","region":"Ridgeland"},{"id":62,"name":"Sheem Dagoze","trial":"Moving in Parallel","region":"Ridgeland"},{"id":63,"name":"Mogg Latan","trial":"Synced Swing","region":"Ridgeland"},{"id":64,"name":"Zalta Wa","trial":"Two Orbs to Guide You","region":"Ridgeland"},{"id":65,"name":"Maag No'rah","trial":"Maag No'rah's Blessing","region":"Ridgeland"},{"id":66,"name":"Toh Yahsa","trial":"Buried Secrets","region":"Ridgeland"},{"id":67,"name":"Sha Warvo","trial":"Path of Hidden Winds","region":"Tabantha"},{"id":68,"name":"Voo Lota","trial":"The Winding Route","region":"Tabantha"},{"id":69,"name":"Akh Va'quot","trial":"Windmills","region":"Tabantha"},{"id":70,"name":"Bareeda Naag","trial":"Cannon","region":"Tabantha"},{"id":71,"name":"Tena Ko'sah","trial":"A Major Test of Strength","region":"Tabantha"},{"id":72,"name":"Kah Okeo","trial":"Wind Guide","region":"Tabantha"},{"id":73,"name":"Hia Miu","trial":"A Major Test of Strength","region":"Hebra"},{"id":74,"name":"To Quomo","trial":"To Quomo's Blessing","region":"Hebra"},{"id":75,"name":"Mozo Shenno","trial":"A Major Test of Strength","region":"Hebra"},{"id":76,"name":"Shada Naw","trial":"Red Giveaway","region":"Hebra"},{"id":77,"name":"Rok Uwog","trial":"Power of Reach","region":"Hebra"},{"id":78,"name":"Sha Gehma","trial":"Shift and Lock","region":"Hebra"},{"id":79,"name":"Qaza Tokki","trial":"Qaza Tokki's Blessing","region":"Hebra"},{"id":80,"name":"Goma Asaagh","trial":"A Major Test of Strength","region":"Hebra"},{"id":81,"name":"Maka Rah","trial":"Steady Thy Heart","region":"Hebra"},{"id":82,"name":"Dunba Taag","trial":"Build and Release","region":"Hebra"},{"id":83,"name":"Lanno Kooh","trial":"Lanno Kooh's Blessing","region":"Hebra"},{"id":84,"name":"Gee Ha'rah","trial":"Tandem","region":"Hebra"},{"id":85,"name":"Rin Oyaa","trial":"Directing the Wind","region":"Hebra"},{"id":86,"name":"Hawa Koth","trial":"The Current Solution","region":"Gerudo Wasteland"},{"id":87,"name":"Kema Zoos","trial":"A Delayed Puzzle","region":"Gerudo Wasteland"},{"id":88,"name":"Tho Kayu","trial":"Tho Kayu's Blessing","region":"Gerudo Wasteland"},{"id":89,"name":"Raqa Zunzo","trial":"Raqa Zunzo's Blessing","region":"Gerudo Wasteland"},{"id":90,"name":"Misae Suma","trial":"Misae Suma's Blessing","region":"Gerudo Wasteland"},{"id":91,"name":"Dila Maag","trial":"Dila Maag's Blessing","region":"Gerudo Wasteland"},{"id":92,"name":"Korsh O'hu","trial":"Korsh O'hu's Blessing","region":"Gerudo Wasteland"},{"id":93,"name":"Kay Noh","trial":"Power of Electricity","region":"Gerudo Wasteland"},{"id":94,"name":"Dako Tah","trial":"Electric Path","region":"Gerudo Wasteland"},{"id":95,"name":"Suma Sahma","trial":"Suma Sahma's Blessing","region":"Gerudo Wasteland"},{"id":96,"name":"Jee Noh","trial":"On the Move","region":"Gerudo Wasteland"},{"id":97,"name":"Daqo Chisay","trial":"The Whole Picture","region":"Gerudo Wasteland"},{"id":98,"name":"Keeha Yoog","trial":"Keeha Yoog's Blessing","region":"Gerudo Highlands"},{"id":99,"name":"Kuh Takkar","trial":"Melting Ice Hazard","region":"Gerudo Highlands"},{"id":100,"name":"Kema Kosassa","trial":"A Major Test of Strength","region":"Gerudo Highlands"},{"id":101,"name":"Sasa Kai","trial":"A Modest Test of Strength","region":"Gerudo Highlands"},{"id":102,"name":"Joloo Nah","trial":"Joloo Nah Apparatus","region":"Gerudo Highlands"},{"id":103,"name":"Sho Dantu","trial":"Two Bombs","region":"Gerudo Highlands"},{"id":104,"name":"Shora Hah","trial":"Blue Flame","region":"Eldin"},{"id":105,"name":"Daqa Koh","trial":"Stalled Flight","region":"Eldin"},{"id":106,"name":"Qua Raym","trial":"A Balanced Approach","region":"Eldin"},{"id":107,"name":"Tah Muhl","trial":"Passing the Flame","region":"Eldin"},{"id":108,"name":"Mo'a Keet","trial":"Metal Makes a Path","region":"Eldin"},{"id":109,"name":"Sah Dahaj","trial":"Power of Fire","region":"Eldin"},{"id":110,"name":"Gorae Torr","trial":"Gorae Torr's Blessing","region":"Eldin"},{"id":111,"name":"Kayra Mah","trial":"Greedy Hill","region":"Eldin"},{"id":112,"name":"Shae Mo'sah","trial":"Swinging Flames","region":"Eldin"},{"id":113,"name":"Zuna Kai","trial":"Zuna Kai's Blessing","region":"Akkala"},{"id":114,"name":"Ze Kasho","trial":"Ze Kasho Apparatus","region":"Akkala"},{"id":115,"name":"Ke'nai Shakah","trial":"A Modest Test of Strength","region":"Akkala"},{"id":116,"name":"Ritaag Zumo","trial":"Ritaag Zumo's Blessing","region":"Akkala"},{"id":117,"name":"Tutsuwa Nima","trial":"A Major Test of Strength","region":"Akkala"},{"id":118,"name":"Tu Ka'loh","trial":"Tu Ka'loh's Blessing","region":"Akkala"},{"id":119,"name":"Dah Hesho","trial":"A Minor Test of Strength","region":"Akkala"},{"id":120,"name":"Katosa Aug","trial":"Katosa Aug Apparatus","region":"Akkala"}];
+const REGIONS = ["Great Plateau","Dueling Peaks","Hateno","Lanayru","Great Hyrule Forest","Central Hyrule","Lake","Faron","Ridgeland","Tabantha","Hebra","Gerudo Wasteland","Gerudo Highlands","Eldin","Akkala"];
+const KEY = 'botw-shrines-done-v1';
+
+let done = {};
+try { done = JSON.parse(localStorage.getItem(KEY)) || {}; } catch {}
+let tab = 'pending';
+
+const $ = (id) => document.getElementById(id);
+const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+$('region').innerHTML = ['Todas', ...REGIONS].map((r) => `<option>${esc(r)}</option>`).join('');
+
+function render() {
+  const total = SHRINES.length;
+  const n = Object.keys(done).length;
+  $('counter').textContent = `${n} / ${total} concluídos`;
+  $('fill').style.width = `${(n / total) * 100}%`;
+  $('tab-pending').textContent = `Pendentes (${total - n})`;
+  $('tab-done').textContent = `Concluídos (${n})`;
+  $('tab-pending').classList.toggle('active', tab === 'pending');
+  $('tab-done').classList.toggle('active', tab === 'done');
+
+  const q = norm($('q').value.trim());
+  const region = $('region').value;
+  const items = SHRINES.filter((s) =>
+    !!done[s.id] === (tab === 'done') &&
+    (region === 'Todas' || s.region === region) &&
+    (!q || norm(`${s.name} ${s.trial} ${s.region}`).includes(q)));
+
+  $('list').innerHTML = items.length
+    ? items.map((s) => `<li><label>
+        <input type="checkbox" data-id="${s.id}" ${done[s.id] ? 'checked' : ''}>
+        <span><span class="name"><span class="num">#${s.id}</span> ${esc(s.name)}</span><br>
+        <span class="sub">${esc(s.trial)} · ${esc(s.region)}</span></span>
+      </label></li>`).join('')
+    : '<p class="empty">Nenhum santuário encontrado.</p>';
+}
+
+$('list').addEventListener('change', (e) => {
+  const id = e.target.dataset.id;
+  if (!id) return;
+  if (e.target.checked) done[id] = true; else delete done[id];
+  try { localStorage.setItem(KEY, JSON.stringify(done)); } catch {}
+  render();
+});
+$('tab-pending').onclick = () => { tab = 'pending'; render(); };
+$('tab-done').onclick = () => { tab = 'done'; render(); };
+$('q').oninput = render;
+$('region').onchange = render;
+render();
+</script>
+</body>
+</html>
